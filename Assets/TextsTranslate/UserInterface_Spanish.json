@@ -54,5 +54,24 @@
       {
         "msm": "English"
       }
+    },
+    "AutomaticTranslation":
+    {
+      "Text01":
+      {
+        "msm": "Este es el texto 1"
+      },
+      "Text02":
+      {
+        "msm": "Este es el texto 2"
+      },
+      "Text03":
+      {
+        "msm": "Este es el texto 3"
+      },
+      "Text04":
+      {
+        "msm": "Este es el texto 4"
+      }
     }
 }
