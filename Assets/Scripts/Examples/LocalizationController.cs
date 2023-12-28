@@ -15,14 +15,7 @@ namespace AlexisDev.Localization.OtherComponent
         [SerializeField] private TextMesh textMesh;
         [SerializeField] private Text description;
 
-        public bool isGetAllContent;
-
-        public enum SearchType
-        {
-            reference,
-            component,
-
-        }
+        public bool isSetDescription;
         #endregion
 
         #region Methods
@@ -30,7 +23,8 @@ namespace AlexisDev.Localization.OtherComponent
         {
             TranslateContent();
         }
-        private void TranslateContent()
+        //It is also invoked from the button component event
+        public void TranslateContent()
         {
             textLegacy.text = Localization.TranslateDirect("TextType", "TextLegacy", JsonArchiveName.UserInterface);
             textMeshPro.text = Localization.TranslateDirect("TextType", "TextMeshPro", JsonArchiveName.UserInterface);
@@ -42,7 +36,7 @@ namespace AlexisDev.Localization.OtherComponent
 
         private void GetAllContent()
         {
-            if (isGetAllContent)
+            if (isSetDescription)
             {
                 description.text = string.Empty;
                 StringBuilder descriptionBuilder = new StringBuilder();

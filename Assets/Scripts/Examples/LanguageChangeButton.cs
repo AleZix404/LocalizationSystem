@@ -12,10 +12,12 @@ namespace AlexisDev.Localization.OtherComponent
         {
             txtChangeLanguage.text = Localization.TranslateDirect("btnChangeLanguage", "TextName", JsonArchiveName.UserInterface);
         }
+        //It is invoked from the button component event.
         public void SetTextChange()
         {
             txtChangeLanguage.text = Localization.TranslateDirect("btnChangeLanguage", "TextName", JsonArchiveName.UserInterface);
         }
+        //It is invoked from the button component event.
         public void ChangeLanguage()
         {
             press++;

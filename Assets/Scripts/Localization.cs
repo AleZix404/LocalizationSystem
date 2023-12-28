@@ -12,51 +12,52 @@ namespace AlexisDev.Localization
     public class Localization : MonoBehaviour
     {
         public static Localization instance;
-        public static Dictionary<string, TextAsset> ContnJson = new Dictionary<string, TextAsset>();
+        public static Dictionary<string, TextAsset> contnJson = new Dictionary<string, TextAsset>();
         public LanguageSettings languageSettings;
 
-        private List<JsonFileData> JsonFiles = new List<JsonFileData>();
-        private Dictionary<string, JsonFileData> JsonFileDataMap = new Dictionary<string, JsonFileData>();
+        private List<JsonFileData> jsonFiles = new List<JsonFileData>();
+        private Dictionary<string, JsonFileData> jsonFileDataMap = new Dictionary<string, JsonFileData>();
         [Tooltip("Uncheck this if you want to do a search by tag and add the tag: automaticTranslation, to the texts you want to translate")]
-        public bool isTypeSearch;
-
-        private List<Component> textComponents = new List<Component>();
+        public bool searchByType;
 
         private void Awake()
+        {
+            CheckDuplicateInstance();
+            DontDestroyOnLoad(gameObject);
+
+            LoadFilesOnAwake();
+            SubscribeToSceneLoadedEvent();
+        }
+
+        private void CheckDuplicateInstance()
         {
             if (instance != null && instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
-
             instance = this;
+        }
 
-            DontDestroyOnLoad(gameObject);
+        private void LoadFilesOnAwake()
+        {
+            FileManagerSettings fileManagerSettings = new(jsonFiles, jsonFileDataMap, contnJson);
+            FileManager.LoadFiles(fileManagerSettings);
 
-            LoadFiles();
+            if (languageSettings.isLoadAllSceneAwake && !ShouldTranslateScene(SceneManager.GetActiveScene()))
+            {
+                AutomaticTranslationTexts();
+            }
+        }
+
+        private void SubscribeToSceneLoadedEvent()
+        {
             if (languageSettings.isLoadAllScene)
             {
                 SceneManager.sceneLoaded += OnSceneLoaded;
             }
         }
-        private void LoadFiles()
-        {
-            foreach (var textAsset in languageSettings.TextJson)
-            {
-                JsonFiles.Add(JsonFileData.FromTextAsset(textAsset));
-                ContnJson[textAsset.name] = textAsset;
 
-                var jsonFileData = JsonFileData.FromTextAsset(textAsset);
-                JsonFileDataMap[jsonFileData.FileName] = jsonFileData;
-                JsonFileDataMap[jsonFileData.ArchiveName.ToString() + languageSettings.SelectedLanguage] = jsonFileData;
-            }
-            if (languageSettings.isLoadAllSceneAwake &&
-                !ShouldTranslateScene(SceneManager.GetActiveScene()))
-            {
-                AutomaticTranslationTexts();
-            }
-        }
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             if (ShouldTranslateScene(scene))
@@ -64,7 +65,7 @@ namespace AlexisDev.Localization
 
             AutomaticTranslationTexts();
         }
-        private bool ShouldTranslateScene(Scene scene)
+        public bool ShouldTranslateScene(Scene scene)
         {
             var skippableScene = languageSettings.nonTranslatableScenes.FirstOrDefault(m => m == scene.name);
             return languageSettings.nonTranslatableScenes.Count > 0 && skippableScene != null;
@@ -72,7 +73,7 @@ namespace AlexisDev.Localization
         public void AutomaticTranslationTexts(string header = "")
         {
             header = string.IsNullOrEmpty(header) ? SceneManager.GetActiveScene().name : header;
-            Component[] textComponents = GetTextComponents();
+            Component[] textComponents = TextComponentFinder.GetTextComponents();
             if (textComponents?.Length > 0)
             {
                 foreach (Component component in textComponents)
@@ -113,50 +114,7 @@ namespace AlexisDev.Localization
                 }
             }
         }
-        private Component[] GetTextComponents()
-        {
-            /*Beta version
-            Right now the improvement is little or it is just a matter of taste in terms of implementation,
-            I hope to be able to improve with the intention of obtaining good performance in comparison.*/
-
-            isTypeSearch = languageSettings.searchMode == LanguageSettings.SearchMode.Type;
-
-            //Support for UI Toolkit in the future
-            SearchAndAddTextComponents<Text>(languageSettings.isTextLegacy);
-            SearchAndAddTextComponents<TextMeshPro>(languageSettings.isTextMeshPro);
-            SearchAndAddTextComponents<TextMeshProUGUI>(languageSettings.isTextMeshProUGUI);
-            SearchAndAddTextComponents<InputField>(languageSettings.isInputText);
-            SearchAndAddTextComponents<TextMesh>(languageSettings.isTextMesh);
-
-            // Returns the list of components that meet the conditions.
-            return textComponents.ToArray();
-        }
-
-        private void SearchAndAddTextComponents<T>(bool shouldSearch) where T : Component
-        {
-            if (shouldSearch)
-            {
-                if (isTypeSearch)
-                    AddComponentsOfType<T>();
-                else
-                    AddComponentsByTag();
-            }
-        }
-
-        private void AddComponentsOfType<T>() where T : Component
-        {
-            textComponents.AddRange(FindObjectsOfType<T>(true));
-        }
-
-        private void AddComponentsByTag()
-        {
-            GameObject[] objectsWithTag = GameObject.FindGameObjectsWithTag("automaticTranslation");
-            foreach (var obj in objectsWithTag)
-            {
-                textComponents.AddRange(obj.GetComponents<Component>());
-            }
-        }
-
+        
         public void AutomaticTranslationTexts(JsonArchiveName indexJson)
         {
             Text[] textComponents = FindObjectsOfType<Text>(true);
@@ -164,9 +122,9 @@ namespace AlexisDev.Localization
             for (int i = 0; i < textComponents.Length; i++)
             {
                 Text textComponent = textComponents[i];
-                string textObjectName = textComponent.tag.Contains("textNotIncluding") ? string.Empty : textComponent.name;
                 string translation = GetAllValues(indexJson)[i];
-                Debug.Log("AutomaticTranslationTexts - translation: " + translation + " textObjectName: " + textObjectName);
+                //string textObjectName = textComponent.tag.Contains("textNotIncluding") ? string.Empty : textComponent.name;
+                //Debug.Log("AutomaticTranslationTexts - translation: " + translation + " textObjectName: " + textObjectName);
 
                 if (!string.IsNullOrEmpty(translation))
                 {
@@ -185,13 +143,13 @@ namespace AlexisDev.Localization
         public static string TranslateParts(string header, string part, JsonArchiveName indexJson)
         {
             string fileName = $"{indexJson}_{instance.languageSettings.SelectedLanguage}";
-            Debug.Log($"ContentTranslate: {header}");
+            //Debug.Log($"ContentTranslate: {header}");
 
-            Debug.Log($"FileName: {fileName}");
+            //Debug.Log($"FileName: {fileName}");
 
-            if (!ContnJson.TryGetValue(fileName, out TextAsset textAsset))
+            if (!contnJson.TryGetValue(fileName, out TextAsset textAsset))
             {
-                Debug.Log($"Text not found for: {fileName}");
+                Debug.Log($"Text not found for: {fileName} - header: {header}");
                 return null;
             }
 
@@ -216,7 +174,7 @@ namespace AlexisDev.Localization
             return null;
         }
         /// <summary>
-        /// El contenido del texto no es sucesivo, es directo, por tanto requiere el nombre del sub header, en el parm content
+        /// The content of the text is not successive, it is direct, therefore it requires the name of the sub header, in the content parm
         /// </summary>
         /// <param name="header"></param>
         /// <param name="content"></param>
@@ -227,9 +185,9 @@ namespace AlexisDev.Localization
             string fileName = $"{indexJson}_{instance.languageSettings.SelectedLanguage}";
             //Debug.Log($"ContentTranslate: {header}");
 
-            if (!ContnJson.TryGetValue(fileName, out TextAsset textAsset))
+            if (!contnJson.TryGetValue(fileName, out TextAsset textAsset))
             {
-                Debug.Log($"Text not found for: {fileName}");
+                Debug.Log($"Text not found for: {fileName} - header: {header}");
                 return null;
             }
 
@@ -253,14 +211,14 @@ namespace AlexisDev.Localization
             //Debug.Log($"Content not found for: {header}");
             return null;
         }
-        public List<string> GetAllValues(JsonArchiveName indexJson)
+        public static List<string> GetAllValues(JsonArchiveName indexJson)
         {
             string fileName = $"{indexJson}_{instance.languageSettings.SelectedLanguage}";
             //Debug.Log($"GetAllValues - indexJson: {indexJson}");
 
             List<string> values = new List<string>();
 
-            if (!ContnJson.TryGetValue(fileName, out TextAsset textAsset))
+            if (!contnJson.TryGetValue(fileName, out TextAsset textAsset))
             {
                 Debug.LogError($"Text not found for: {fileName}");
             }
@@ -289,9 +247,9 @@ namespace AlexisDev.Localization
 
             List<string> values = new List<string>();
 
-            if (!ContnJson.TryGetValue(fileName, out TextAsset textAsset))
+            if (!contnJson.TryGetValue(fileName, out TextAsset textAsset))
             {
-                Debug.Log($"Text not found for: {fileName}");
+                Debug.Log($"Text not found for: {fileName} - header: {header}");
                 return values;
             }
 
@@ -312,26 +270,6 @@ namespace AlexisDev.Localization
             }
 
             return values;
-        }
-
-        private class JsonFileData
-        {
-            public string FileName { get; set; }
-            public JsonArchiveName ArchiveName { get; set; }
-            public JObject Data { get; set; }
-
-            public static JsonFileData FromTextAsset(TextAsset textAsset)
-            {
-                var json = JObject.Parse(textAsset.text);
-                return new JsonFileData
-                {
-                    FileName = textAsset.name,
-                    ArchiveName = (JsonArchiveName)Enum.Parse(typeof(JsonArchiveName), textAsset.name.Split('_')[0], true),
-                    Data = json,
-                };
-            }
-
-            public JObject this[string header] => Data[header] as JObject;
         }
     }
 }

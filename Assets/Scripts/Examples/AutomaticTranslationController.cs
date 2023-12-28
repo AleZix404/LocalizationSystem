@@ -17,6 +17,7 @@ namespace AlexisDev.Localization.OtherComponent
         {
             SetTranslationTexts();
         }
+        //It is also invoked from the button component event
         public void SetTranslationTexts()
         {
             Localization.instance.AutomaticTranslationTexts(headerJson);
