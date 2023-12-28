@@ -18,10 +18,10 @@ MonoBehaviour:
   isTextMeshPro: 1
   isTextMesh: 1
   isInputText: 1
-  isLoadAllScene: 0
-  isLoadAllSceneAwake: 0
+  isLoadAllSceneAwake: 1
   searchMode: 0
-  nonTranslatableScenes: []
+  nonTranslatableScenes:
+  - SampleScene
   TextJson:
   - {fileID: 4900000, guid: daa27622835b30849ac3064a58a9ae12, type: 3}
   - {fileID: 4900000, guid: 55cbdfa4a0dd8f141aa8b2cad9f8e707, type: 3}

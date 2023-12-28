@@ -11,13 +11,12 @@ namespace AlexisDev.Localization
         [Header("The current language to translate:")]
         [SerializeField] private string selectedLanguage;
 
-        [Header("Kind of text:")]
+        [Header("Type of text:")]
         public bool isTextLegacy;
         public bool isTextMeshProUGUI, isTextMeshPro, isTextMesh, isInputText;
 
         [Header("Moments of translation:")]
         [Tooltip("Automatic translation of all texts")]
-        public bool isLoadAllScene;
         public bool isLoadAllSceneAwake;
 
         [Header("Automatic translation of all texts")]

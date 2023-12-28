@@ -52,7 +52,7 @@ namespace AlexisDev.Localization
 
         private void SubscribeToSceneLoadedEvent()
         {
-            if (languageSettings.isLoadAllScene)
+            if (languageSettings.isLoadAllSceneAwake)
             {
                 SceneManager.sceneLoaded += OnSceneLoaded;
             }
