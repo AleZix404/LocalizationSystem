@@ -1062,7 +1062,7 @@ MonoBehaviour:
   textMeshProUGUI: {fileID: 1861797073}
   textMesh: {fileID: 102903263}
   description: {fileID: 71720935}
-  isGetAllContent: 1
+  isSetDescription: 1
 --- !u!1 &1758671033
 GameObject:
   m_ObjectHideFlags: 0
@@ -1311,8 +1311,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   languageSettings: {fileID: 11400000, guid: 7774577dcbb757946900aeb23a82c183, type: 2}
-  isFinisJsonLoad: 0
-  isTypeSearch: 0
+  searchByType: 0
 --- !u!1 &2096731052
 GameObject:
   m_ObjectHideFlags: 0
