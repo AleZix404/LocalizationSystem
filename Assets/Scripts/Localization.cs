@@ -1,6 +1,5 @@
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -8,330 +7,269 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public enum JsonArchiveName
+namespace AlexisDev.Localization
 {
-    Subtitle,
-    UserInterface
-}
-public class Localization : MonoBehaviour
-{
-    public static Localization instance;
-    public static Dictionary<string, TextAsset> ContnJson = new Dictionary<string, TextAsset>();
-    public LanguageSettings languageSettings;
-
-    private List<JsonFileData> JsonFiles = new List<JsonFileData>();
-    private Dictionary<string, JsonFileData> JsonFileDataMap = new Dictionary<string, JsonFileData>();
-    public bool isFinisJsonLoad, isTypeSearch;
-
-    List<Component> textComponents = new List<Component>();
-
-    private void Awake()
+    public class Localization : MonoBehaviour
     {
-        if (instance != null && instance != this)
+        public static Localization instance;
+        public static Dictionary<string, TextAsset> contnJson = new Dictionary<string, TextAsset>();
+        public LanguageSettings languageSettings;
+
+        private List<JsonFileData> jsonFiles = new List<JsonFileData>();
+        private Dictionary<string, JsonFileData> jsonFileDataMap = new Dictionary<string, JsonFileData>();
+        [Tooltip("Uncheck this if you want to do a search by tag and add the tag: automaticTranslation, to the texts you want to translate")]
+        public bool searchByType;
+
+        private void Awake()
         {
-            Destroy(gameObject);
-            return;
+            CheckDuplicateInstance();
+            DontDestroyOnLoad(gameObject);
+
+            LoadFilesOnAwake();
+            SubscribeToSceneLoadedEvent();
         }
 
-        instance = this;
-
-        DontDestroyOnLoad(gameObject);
-
-        LoadFiles();
-        if (languageSettings.isLoadAllScene)
+        private void CheckDuplicateInstance()
         {
-            SceneManager.sceneLoaded += OnSceneLoaded;
+            if (instance != null && instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            instance = this;
         }
-    }
-    private void LoadFiles()
-    {
-        foreach (var textAsset in languageSettings.TextJson)
-        {
-            JsonFiles.Add(JsonFileData.FromTextAsset(textAsset));
-            ContnJson[textAsset.name] = textAsset;
 
-            var jsonFileData = JsonFileData.FromTextAsset(textAsset);
-            JsonFileDataMap[jsonFileData.FileName] = jsonFileData;
-            JsonFileDataMap[jsonFileData.ArchiveName.ToString() + languageSettings.SelectedLanguage] = jsonFileData;
-        }
-        if (languageSettings.isLoadAllSceneAwake &&
-            !ShouldTranslateScene(SceneManager.GetActiveScene()))
+        private void LoadFilesOnAwake()
         {
+            FileManagerSettings fileManagerSettings = new(jsonFiles, jsonFileDataMap, contnJson);
+            FileManager.LoadFiles(fileManagerSettings);
+
+            if (languageSettings.isLoadAllSceneAwake && !ShouldTranslateScene(SceneManager.GetActiveScene()))
+            {
+                AutomaticTranslationTexts();
+            }
+        }
+
+        private void SubscribeToSceneLoadedEvent()
+        {
+            if (languageSettings.isLoadAllScene)
+            {
+                SceneManager.sceneLoaded += OnSceneLoaded;
+            }
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (ShouldTranslateScene(scene))
+                return;
+
             AutomaticTranslationTexts();
         }
-    }
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
-        if (ShouldTranslateScene(scene))
+        public bool ShouldTranslateScene(Scene scene)
         {
-            return;
+            var skippableScene = languageSettings.nonTranslatableScenes.FirstOrDefault(m => m == scene.name);
+            return languageSettings.nonTranslatableScenes.Count > 0 && skippableScene != null;
         }
-        Debug.Log("Se cargó la escena: " + scene.name);
-        AutomaticTranslationTexts();
-    }
-    private bool ShouldTranslateScene(Scene scene)
-    {
-        var skippableScene = languageSettings.nonTranslatableScenes.FirstOrDefault(m => m == scene.name);
-        return languageSettings.nonTranslatableScenes.Count > 0 && skippableScene != null;
-    }
-    public void AutomaticTranslationTexts(string header = "")
-    {
-        header = string.IsNullOrEmpty(header) ? SceneManager.GetActiveScene().name : header;
-        Component[] textComponents = GetTextComponents();
-        if (textComponents?.Length > 0)
+        public void AutomaticTranslationTexts(string header = "")
         {
-            foreach (Component component in textComponents)
+            header = string.IsNullOrEmpty(header) ? SceneManager.GetActiveScene().name : header;
+            Component[] textComponents = TextComponentFinder.GetTextComponents();
+            if (textComponents?.Length > 0)
             {
-                if (component != null)
+                foreach (Component component in textComponents)
                 {
-                    string textObjectName = component.tag.Contains("textNotIncluding") ? string.Empty : component.gameObject.name;
-                    string translation = TranslateDirect(header, textObjectName, JsonArchiveName.UserInterface);
-                    //Debug.Log("AutomaticTranslationTexts - header: " + header + "textObjectName: " + textObjectName + "tr" + translation);
-                    if (!string.IsNullOrEmpty(translation))
+                    if (component != null)
                     {
-                        switch (component)
+                        string textObjectName = component.tag.Contains("textNotIncluding") ? string.Empty : component.gameObject.name;
+                        string translation = TranslateDirect(header, textObjectName, JsonArchiveName.UserInterface);
+                        if (!string.IsNullOrEmpty(translation))
                         {
-                            case Text textComponent:
-                                textComponent.text = translation;
-                                break;
+                            switch (component)
+                            {
+                                case Text textComponent:
+                                    textComponent.text = translation;
+                                    break;
 
-                            case TextMeshPro tmpComponent:
-                                tmpComponent.text = translation;
-                                break;
+                                case TextMeshPro tmpComponent:
+                                    tmpComponent.text = translation;
+                                    break;
 
-                            case TextMeshProUGUI tmpUGUIComponent:
-                                tmpUGUIComponent.text = translation;
-                                break;
+                                case TextMeshProUGUI tmpUGUIComponent:
+                                    tmpUGUIComponent.text = translation;
+                                    break;
 
-                            case InputField inputField:
-                                inputField.text = translation;
-                                break;
+                                case InputField inputField:
+                                    inputField.text = translation;
+                                    break;
 
-                            case TextMesh textMesh:
-                                textMesh.text = translation;
-                                break;
-                            // Agrega más casos para otros tipos de componentes si es necesario
-                            default:
-                                break;
+                                case TextMesh textMesh:
+                                    textMesh.text = translation;
+                                    break;
+                                // Add more cases for other component types if necessary
+                                default:
+                                    break;
+                            }
                         }
                     }
                 }
             }
         }
-    }
-    private Component[] GetTextComponents()
-    {
-        isTypeSearch = languageSettings.searchMode == LanguageSettings.SearchMode.Type;
-
-        SearchAndAddTextComponents<Text>(languageSettings.isTextLegacy);
-        SearchAndAddTextComponents<TextMeshPro>(languageSettings.isTextMeshPro);
-        SearchAndAddTextComponents<TextMeshProUGUI>(languageSettings.isTextMeshProUGUI);
-        SearchAndAddTextComponents<InputField>(languageSettings.isInputText);
-        SearchAndAddTextComponents<TextMesh>(languageSettings.isTextMesh);
-
-        // Devuelve la lista de componentes que cumplan con las condiciones.
-        return textComponents.ToArray();
-    }
-
-    private void SearchAndAddTextComponents<T>(bool shouldSearch) where T : Component
-    {
-        if (shouldSearch)
+        
+        public void AutomaticTranslationTexts(JsonArchiveName indexJson)
         {
-            if (isTypeSearch)
-                AddComponentsOfType<T>();
-            else
-                AddComponentsByTag();
-        }
-    }
+            Text[] textComponents = FindObjectsOfType<Text>(true);
 
-    private void AddComponentsOfType<T>() where T : Component
-    {
-        textComponents.AddRange(FindObjectsOfType<T>(true));
-    }
-
-    private void AddComponentsByTag()
-    {
-        GameObject[] objectsWithTag = GameObject.FindGameObjectsWithTag("automaticTranslation");
-        foreach (var obj in objectsWithTag)
-        {
-            textComponents.AddRange(obj.GetComponents<Component>());
-        }
-    }
-
-    public void AutomaticTranslationTexts(JsonArchiveName indexJson)
-    {
-        Text[] textComponents = FindObjectsOfType<Text>(true);
-
-        for (int i = 0; i < textComponents.Length; i++)
-        {
-            Text textComponent = textComponents[i];
-            string textObjectName = textComponent.tag.Contains("textNotIncluding") ? string.Empty : textComponent.name;
-            string translation = GetAllValues(indexJson)[i];
-            Debug.Log("AutomaticTranslationTexts - translation: " + translation + " textObjectName: " + textObjectName);
-
-            if (!string.IsNullOrEmpty(translation))
+            for (int i = 0; i < textComponents.Length; i++)
             {
-                textComponent.text = translation;
-            }
-        }
-    }
+                Text textComponent = textComponents[i];
+                string translation = GetAllValues(indexJson)[i];
+                //string textObjectName = textComponent.tag.Contains("textNotIncluding") ? string.Empty : textComponent.name;
+                //Debug.Log("AutomaticTranslationTexts - translation: " + translation + " textObjectName: " + textObjectName);
 
-    /// <summary>
-    /// part se refiere a la cantidad de veces que ha sido pulsado el boton de continuar
-    /// </summary>
-    /// <param name="header"></param>
-    /// <param name="part"></param>
-    /// <param name="indexJson"></param>
-    /// <returns></returns>
-    public static string TranslateParts(string header, string part, JsonArchiveName indexJson)
-    {
-        string fileName = $"{indexJson}_{instance.languageSettings.SelectedLanguage}";
-        Debug.Log($"ContentTranslate: {header}");
-
-        Debug.Log($"FileName: {fileName}");
-
-        if (!ContnJson.TryGetValue(fileName, out TextAsset textAsset))
-        {
-            Debug.Log($"Text not found for: {fileName}");
-            return null;
-        }
-
-        JObject jsonObject = JObject.Parse(textAsset.text);
-
-        if (jsonObject[header] == null)
-        {
-            Debug.Log($"Text not found for: {header}");
-            return null;
-        }
-
-        JObject innerObject;
-        while ((innerObject = (JObject)jsonObject[header]["press" + part]) != null)
-        {
-            if (innerObject["msm"] != null)
-            {
-                return innerObject["msm"].ToString();
+                if (!string.IsNullOrEmpty(translation))
+                {
+                    textComponent.text = translation;
+                }
             }
         }
 
-        Debug.Log($"Content not found for: {header}");
-        return null;
-    }
-    /// <summary>
-    /// El contenido del texto no es sucesivo, es directo, por tanto requiere el nombre del sub header, en el parm content
-    /// </summary>
-    /// <param name="header"></param>
-    /// <param name="content"></param>
-    /// <param name="indexJson"></param>
-    /// <returns></returns>
-    public static string TranslateDirect(string header, string content, JsonArchiveName indexJson)
-    {
-        string fileName = $"{indexJson}_{instance.languageSettings.SelectedLanguage}";
-        //Debug.Log($"ContentTranslate: {header}");
-
-        if (!ContnJson.TryGetValue(fileName, out TextAsset textAsset))
+        /// <summary>
+        /// part refers to the number of times the continue button has been pressed
+        /// </summary>
+        /// <param name="header"></param>
+        /// <param name="part"></param>
+        /// <param name="indexJson"></param>
+        /// <returns></returns>
+        public static string TranslateParts(string header, string part, JsonArchiveName indexJson)
         {
-            Debug.Log($"Text not found for: {fileName}");
+            string fileName = $"{indexJson}_{instance.languageSettings.SelectedLanguage}";
+            //Debug.Log($"ContentTranslate: {header}");
+
+            //Debug.Log($"FileName: {fileName}");
+
+            if (!contnJson.TryGetValue(fileName, out TextAsset textAsset))
+            {
+                Debug.Log($"Text not found for: {fileName} - header: {header}");
+                return null;
+            }
+
+            JObject jsonObject = JObject.Parse(textAsset.text);
+
+            if (jsonObject[header] == null)
+            {
+                Debug.Log($"Text not found for: {header}");
+                return null;
+            }
+
+            JObject innerObject;
+            while ((innerObject = (JObject)jsonObject[header]["press" + part]) != null)
+            {
+                if (innerObject["msm"] != null)
+                {
+                    return innerObject["msm"].ToString();
+                }
+            }
+
+            Debug.Log($"Content not found for: {header}");
             return null;
         }
-
-        JObject jsonObject = JObject.Parse(textAsset.text);
-
-        if (jsonObject[header] == null)
+        /// <summary>
+        /// The content of the text is not successive, it is direct, therefore it requires the name of the sub header, in the content parm
+        /// </summary>
+        /// <param name="header"></param>
+        /// <param name="content"></param>
+        /// <param name="indexJson"></param>
+        /// <returns></returns>
+        public static string TranslateDirect(string header, string content, JsonArchiveName indexJson)
         {
-            Debug.Log($"Text not found for: {header}");
+            string fileName = $"{indexJson}_{instance.languageSettings.SelectedLanguage}";
+            //Debug.Log($"ContentTranslate: {header}");
+
+            if (!contnJson.TryGetValue(fileName, out TextAsset textAsset))
+            {
+                Debug.Log($"Text not found for: {fileName} - header: {header}");
+                return null;
+            }
+
+            JObject jsonObject = JObject.Parse(textAsset.text);
+
+            if (jsonObject[header] == null)
+            {
+                Debug.Log($"Text not found for: {header}");
+                return null;
+            }
+
+            JObject innerObject;
+            if ((innerObject = (JObject)jsonObject[header][content]) != null)
+            {
+                if (innerObject["msm"] != null)
+                {
+                    return innerObject["msm"].ToString();
+                }
+            }
+
+            //Debug.Log($"Content not found for: {header}");
             return null;
         }
-
-        JObject innerObject;
-        if ((innerObject = (JObject)jsonObject[header][content]) != null)
+        public static List<string> GetAllValues(JsonArchiveName indexJson)
         {
-            if (innerObject["msm"] != null)
+            string fileName = $"{indexJson}_{instance.languageSettings.SelectedLanguage}";
+            //Debug.Log($"GetAllValues - indexJson: {indexJson}");
+
+            List<string> values = new List<string>();
+
+            if (!contnJson.TryGetValue(fileName, out TextAsset textAsset))
             {
-                return innerObject["msm"].ToString();
+                Debug.LogError($"Text not found for: {fileName}");
             }
-        }
 
-        //Debug.Log($"Content not found for: {header}");
-        return null;
-    }
-    public List<string> GetAllValues(JsonArchiveName indexJson)
-    {
-        string fileName = $"{indexJson}_{instance.languageSettings.SelectedLanguage}";
-        //Debug.Log($"GetAllValues - indexJson: {indexJson}");
+            JObject jsonObject = JObject.Parse(textAsset.text);
 
-        List<string> values = new List<string>();
-
-        if (!ContnJson.TryGetValue(fileName, out TextAsset textAsset))
-        {
-            Debug.LogError($"Text not found for: {fileName}");
-        }
-
-        JObject jsonObject = JObject.Parse(textAsset.text);
-
-        if (jsonObject == null)
-        {
-            Debug.LogError($"Text not found for: {jsonObject}");
-        }
-
-        foreach (var subHeader in jsonObject.Children<JProperty>())
-        {
-            if (subHeader.Value["msm"] != null)
+            if (jsonObject == null)
             {
-                values.Add(subHeader.Value["msm"].ToString());
+                Debug.LogError($"Text not found for: {jsonObject}");
             }
-        }
 
-        return values;
-    }
-    public static List<string> GetAllValues(string header, JsonArchiveName indexJson)
-    {
-        string fileName = $"{indexJson}_{instance.languageSettings.SelectedLanguage}";
-        //Debug.Log($"GetAllValues: {header}");
+            foreach (var subHeader in jsonObject.Children<JProperty>())
+            {
+                if (subHeader.Value["msm"] != null)
+                {
+                    values.Add(subHeader.Value["msm"].ToString());
+                }
+            }
 
-        List<string> values = new List<string>();
-
-        if (!ContnJson.TryGetValue(fileName, out TextAsset textAsset))
-        {
-            Debug.Log($"Text not found for: {fileName}");
             return values;
         }
-
-        JObject jsonObject = JObject.Parse(textAsset.text);
-
-        if (jsonObject[header] == null)
+        public static List<string> GetAllValues(string header, JsonArchiveName indexJson)
         {
-            Debug.Log($"Text not found for: {header}");
+            string fileName = $"{indexJson}_{instance.languageSettings.SelectedLanguage}";
+            //Debug.Log($"GetAllValues: {header}");
+
+            List<string> values = new List<string>();
+
+            if (!contnJson.TryGetValue(fileName, out TextAsset textAsset))
+            {
+                Debug.Log($"Text not found for: {fileName} - header: {header}");
+                return values;
+            }
+
+            JObject jsonObject = JObject.Parse(textAsset.text);
+
+            if (jsonObject[header] == null)
+            {
+                Debug.Log($"Text not found for: {header}");
+                return values;
+            }
+
+            foreach (var subHeader in jsonObject[header].Children<JProperty>())
+            {
+                if (subHeader.Value["msm"] != null)
+                {
+                    values.Add(subHeader.Value["msm"].ToString());
+                }
+            }
+
             return values;
         }
-
-        foreach (var subHeader in jsonObject[header].Children<JProperty>())
-        {
-            if (subHeader.Value["msm"] != null)
-            {
-                values.Add(subHeader.Value["msm"].ToString());
-            }
-        }
-
-        return values;
-    }
-
-    private class JsonFileData
-    {
-        public string FileName { get; set; }
-        public JsonArchiveName ArchiveName { get; set; }
-        public JObject Data { get; set; }
-
-        public static JsonFileData FromTextAsset(TextAsset textAsset)
-        {
-            var json = JObject.Parse(textAsset.text);
-            return new JsonFileData
-            {
-                FileName = textAsset.name,
-                ArchiveName = (JsonArchiveName)Enum.Parse(typeof(JsonArchiveName), textAsset.name.Split('_')[0], true),
-                Data = json,
-            };
-        }
-
-        public JObject this[string header] => Data[header] as JObject;
     }
 }

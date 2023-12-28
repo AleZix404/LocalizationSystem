@@ -3,15 +3,15 @@
     {
       "Continue":
       {
-        "msm": "Continuar"
+        "msm": "Continue"
       },
       "NewGame":
       {
-        "msm": "Nuevo Juego"
+        "msm": "New Game"
       },
       "Options":
       {
-        "msm": "Opciones"
+        "msm": "Options"
       },
       "Exit":
       {
@@ -53,6 +53,25 @@
       "press1":
       {
         "msm": "English"
+      }
+    },
+    "AutomaticTranslation":
+    {
+      "Text01":
+      {
+        "msm": "This is Text 1"
+      },
+      "Text02":
+      {
+        "msm": "This is Text 2"
+      },
+      "Text03":
+      {
+        "msm": "This is Text 3"
+      },
+      "Text04":
+      {
+        "msm": "This is Text 4"
       }
     }
 }
