@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6826df44221c3b04da3c1b2e68fc8f99, type: 3}
+  m_Name: LanguageSettings
+  m_EditorClassIdentifier: 
+  selectedLanguage: Spanish
+  isTextLegacy: 1
+  isTextMeshProUGUI: 1
+  isTextMeshPro: 1
+  isTextMesh: 1
+  isInputText: 1
+  isLoadAllScene: 0
+  isLoadAllSceneAwake: 0
+  searchMode: 0
+  nonTranslatableScenes: []
+  TextJson:
+  - {fileID: 4900000, guid: daa27622835b30849ac3064a58a9ae12, type: 3}
+  - {fileID: 4900000, guid: 55cbdfa4a0dd8f141aa8b2cad9f8e707, type: 3}
+  - {fileID: 4900000, guid: 17487ccb1f020b7428693ca32165b0fd, type: 3}

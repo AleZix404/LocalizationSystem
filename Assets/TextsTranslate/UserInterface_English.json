@@ -1,0 +1,77 @@
+{
+    "MenuOptions":
+    {
+      "Continue":
+      {
+        "msm": "Continue"
+      },
+      "NewGame":
+      {
+        "msm": "New Game"
+      },
+      "Options":
+      {
+        "msm": "Options"
+      },
+      "Exit":
+      {
+        "msm": "Exit Game"
+      }
+    },
+    "TextType":
+    {
+      "TextLegacy":
+      {
+        "msm": "The legacy text has been translated"
+      },
+      "TextMeshPro":
+      {
+        "msm": "The TextMeshPro text has been translated"
+      },
+      "TextMeshProUGUI":
+      {
+        "msm": "The TextMeshProUGUI text has been translated"
+      },
+      "TextMesh":
+      {
+        "msm": "The TextMesh text has been translated"
+      }
+    },
+    "btnChangeLanguage":
+    {
+      "TextName":
+      {
+        "msm": "Change Language"
+      }
+    },
+    "SelectLanguage":
+    {
+      "press0":
+      {
+        "msm": "Spanish"
+      },
+      "press1":
+      {
+        "msm": "English"
+      }
+    },
+    "AutomaticTranslation":
+    {
+      "Text01":
+      {
+        "msm": "This is Text 1"
+      },
+      "Text02":
+      {
+        "msm": "This is Text 2"
+      },
+      "Text03":
+      {
+        "msm": "This is Text 3"
+      },
+      "Text04":
+      {
+        "msm": "This is Text 4"
+      }
+    }
+}

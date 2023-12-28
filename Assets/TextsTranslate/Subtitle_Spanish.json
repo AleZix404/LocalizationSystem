@@ -1,0 +1,28 @@
+{
+    "SubtitleExample":
+    {
+      "press0":
+      {
+        "msm": "Bienvenido y considere esto parte de un tutorial"
+      },
+      "press1":
+      {
+        "msm": "como observara, tenemos encabezados con el nombre press"
+      },
+      "press2":
+      {
+        "msm": "seguido de un número, considere siempre comenzar con 0"
+      },
+      "press3":
+      {
+        "msm": "cuantas mas haya, significa que cambiara de contenido ya sea pasado un tiempo o una iteración, eso dependera de como programe usted"
+      }
+    },
+    "OtherSubtitle":
+    {
+      "press0":
+      {
+        "msm": "Perzonalice el contenido"
+      }
+    }
+}
